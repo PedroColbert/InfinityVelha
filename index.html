@@ -13,7 +13,9 @@
             background: linear-gradient(135deg, #18181b 0%, #000000 100%);
             color: white;
             min-height: 100vh;
-            overflow: hidden;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .glass-panel {
@@ -92,9 +94,34 @@
             50% { transform: translate(50px, 50px); }
             100% { transform: translate(0, 0); }
         }
+
+        .app-shell {
+            width: min(100%, 28rem);
+        }
+
+        .board-shell {
+            width: min(100%, 25rem, calc(100dvh - 20rem));
+        }
+
+        @media (max-height: 820px) {
+            .compact-title {
+                font-size: 2.5rem;
+                line-height: 1;
+            }
+
+            .board-shell {
+                width: min(100%, 22rem, calc(100dvh - 18rem));
+            }
+        }
+
+        @media (max-height: 700px) {
+            .board-shell {
+                width: min(100%, 19rem, calc(100dvh - 16rem));
+            }
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center relative">
+<body class="relative flex min-h-screen min-h-[100dvh] flex-col items-center justify-start sm:justify-center px-4 py-4 sm:px-6 sm:py-6">
     
     <!-- Tela Inicial -->
     <div id="start-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950 cursor-pointer transition-opacity duration-700">
@@ -108,11 +135,11 @@
     <div class="glow-blob"></div>
     <div class="glow-blob glow-blob-2"></div>
 
-    <div class="max-w-md w-full px-4 sm:px-6 flex flex-col items-center gap-4 sm:gap-6 z-10">
+    <div class="app-shell w-full flex flex-col items-center gap-3 sm:gap-5 z-10">
         
         <!-- Cabeçalho -->
-        <header class="text-center space-y-2 mt-4 sm:mt-8">
-            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-purple-500 drop-shadow-sm">
+        <header class="text-center space-y-2 mt-1 sm:mt-4">
+            <h1 class="compact-title text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-purple-500 drop-shadow-sm">
                 InfinityVelha
             </h1>
         </header>
@@ -126,14 +153,14 @@
         </div>
 
         <!-- Tabuleiro -->
-        <div class="glass-panel p-3 sm:p-5 rounded-3xl w-full max-w-[400px]">
+        <div class="board-shell glass-panel p-3 sm:p-5 rounded-3xl">
             <div id="board" class="grid grid-cols-3 gap-2 sm:gap-4">
                 <!-- Células geradas via JS -->
             </div>
         </div>
 
         <!-- Botão Reiniciar -->
-        <button id="reset-btn" class="mb-4 sm:mb-8 px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-semibold text-white transition-all duration-300 backdrop-blur-sm active:scale-95 flex items-center gap-2 shadow-lg text-sm sm:text-base">
+        <button id="reset-btn" class="mb-1 sm:mb-2 px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-semibold text-white transition-all duration-300 backdrop-blur-sm active:scale-95 flex items-center gap-2 shadow-lg text-sm sm:text-base">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Reiniciar Partida
         </button>
