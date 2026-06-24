@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfinityVelha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #18181b 0%, #000000 100%);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        .cell:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .cell:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .piece-x {
+            color: #fbbf24;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .piece-o {
+            color: #a855f7;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .winning-cell {
+            background: rgba(34, 197, 94, 0.2) !important;
+            border-color: rgba(34, 197, 94, 0.5) !important;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.3) !important;
+            transform: scale(1.05) !important;
+            z-index: 10;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        /* Efeitos de brilho no fundo */
+        .glow-blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #fbbf24;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: -1;
+            top: -100px;
+            left: -100px;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .glow-blob-2 {
+            background: #a855f7;
+            bottom: -100px;
+            right: -100px;
+            top: auto;
+            left: auto;
+            animation: float 12s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+            100% { transform: translate(0, 0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center relative">
+    
+    <!-- Tela Inicial -->
+    <div id="start-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950 cursor-pointer transition-opacity duration-700">
+        <h1 class="text-4xl sm:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-purple-500 drop-shadow-lg text-center px-4 w-full break-words">
+            InfinityVelha
+        </h1>
+        <p class="text-zinc-400 animate-pulse text-base sm:text-lg mt-8 sm:mt-12 px-4 text-center">Toque em qualquer lugar para começar</p>
+    </div>
+
+    <!-- Elementos de fundo -->
+    <div class="glow-blob"></div>
+    <div class="glow-blob glow-blob-2"></div>
+
+    <div class="max-w-md w-full px-4 sm:px-6 flex flex-col items-center gap-4 sm:gap-6 z-10">
+        
+        <!-- Cabeçalho -->
+        <header class="text-center space-y-2 mt-4 sm:mt-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-purple-500 drop-shadow-sm">
+                InfinityVelha
+            </h1>
+        </header>
+
+        <!-- Status / Placar -->
+        <div id="status-card" class="glass-panel w-full py-3 sm:py-4 rounded-2xl flex items-center justify-center transition-all duration-300">
+            <div id="status-content" class="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+                <span class="text-slate-300">Vez do jogador:</span>
+                <span id="current-player-display" class="font-bold text-2xl sm:text-3xl text-amber-400 drop-shadow-md">X</span>
+            </div>
+        </div>
+
+        <!-- Tabuleiro -->
+        <div class="glass-panel p-3 sm:p-5 rounded-3xl w-full max-w-[400px]">
+            <div id="board" class="grid grid-cols-3 gap-2 sm:gap-4">
+                <!-- Células geradas via JS -->
+            </div>
+        </div>
+
+        <!-- Botão Reiniciar -->
+        <button id="reset-btn" class="mb-4 sm:mb-8 px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-semibold text-white transition-all duration-300 backdrop-blur-sm active:scale-95 flex items-center gap-2 shadow-lg text-sm sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reiniciar Partida
+        </button>
+
+    </div>
+
+    <script>
+        // Estado do Jogo
+        let board = Array(9).fill(null);
+        let currentPlayer = 'X';
+        let moves = { 'X': [], 'O': [] };
+        let winner = null;
+        let winningLine = null;
+
+        // Elementos DOM
+        const startScreen = document.getElementById('start-screen');
+        const boardEl = document.getElementById('board');
+        const statusContent = document.getElementById('status-content');
+        const statusCard = document.getElementById('status-card');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Linhas de vitória possíveis
+        const winLines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontais
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Verticais
+            [0, 4, 8], [2, 4, 6]             // Diagonais
+        ];
+
+        // Inicializa o tabuleiro no DOM
+        function initBoard() {
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const btn = document.createElement('button');
+                btn.className = `cell aspect-square w-full rounded-xl sm:rounded-2xl flex items-center justify-center text-5xl sm:text-7xl font-black bg-white/5 border border-white/5 cursor-pointer`;
+                btn.dataset.index = i;
+                btn.addEventListener('click', () => handleCellClick(i));
+                boardEl.appendChild(btn);
+            }
+            render();
+        }
+
+        // Verifica se há um vencedor
+        function checkWinner() {
+            for (let line of winLines) {
+                const [a, b, c] = line;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return { player: board[a], line };
+                }
+            }
+            return null;
+        }
+
+        // Lida com o clique na célula
+        function handleCellClick(index) {
+            if (board[index] || winner) return;
+
+            // Registra jogada
+            board[index] = currentPlayer;
+            moves[currentPlayer].push(index);
+
+            // Regra do infinito: na 4ª jogada, remove a 1ª (limite de 3 peças)
+            if (moves[currentPlayer].length > 3) {
+                const oldestMove = moves[currentPlayer].shift();
+                board[oldestMove] = null;
+            }
+
+            // Checa vitória após a jogada
+            const winResult = checkWinner();
+            if (winResult) {
+                winner = winResult.player;
+                winningLine = winResult.line;
+            } else {
+                // Alterna turno
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            }
+
+            render();
+        }
+
+        // Atualiza a interface (DOM)
+        function render() {
+            const cells = boardEl.children;
+            
+            // Atualiza cada célula
+            for (let i = 0; i < 9; i++) {
+                const cell = cells[i];
+                const piece = board[i];
+                
+                // Limpa classes antigas e mantém área de toque para telemóvel
+                cell.className = `cell aspect-square w-full rounded-xl sm:rounded-2xl flex items-center justify-center text-5xl sm:text-7xl font-black bg-white/5 border border-white/5`;
+                cell.innerHTML = '';
+                cell.disabled = false;
+
+                if (piece) {
+                    cell.disabled = true;
+                    const span = document.createElement('span');
+                    span.textContent = piece;
+                    span.className = piece === 'X' ? 'piece-x' : 'piece-o';
+                    cell.appendChild(span);
+                }
+
+                // Células vencedoras
+                if (winningLine && winningLine.includes(i)) {
+                    cell.classList.add('winning-cell');
+                }
+
+                // Desabilita tabuleiro vazio se houver vencedor
+                if (winner && !piece) {
+                    cell.disabled = true;
+                }
+            }
+
+            // Atualiza o painel de status
+            if (winner) {
+                const colorClass = winner === 'X' ? 'text-amber-400' : 'text-purple-400';
+                statusContent.innerHTML = `<span class="font-extrabold text-2xl sm:text-3xl ${colorClass} drop-shadow-md">Jogador ${winner} Venceu! 🎉</span>`;
+                statusCard.style.boxShadow = winner === 'X' ? '0 0 30px rgba(251, 191, 36, 0.2)' : '0 0 30px rgba(168, 85, 247, 0.2)';
+                statusCard.style.borderColor = winner === 'X' ? 'rgba(251, 191, 36, 0.3)' : 'rgba(168, 85, 247, 0.3)';
+            } else {
+                const colorClass = currentPlayer === 'X' ? 'text-amber-400' : 'text-purple-400';
+                statusContent.innerHTML = `
+                    <span class="text-slate-300">Vez do jogador:</span>
+                    <span class="font-bold text-3xl ${colorClass} drop-shadow-md">${currentPlayer}</span>
+                `;
+                statusCard.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.5)';
+                statusCard.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+            }
+        }
+
+        // Reinicia o jogo
+        function resetGame() {
+            board = Array(9).fill(null);
+            currentPlayer = 'X';
+            moves = { 'X': [], 'O': [] };
+            winner = null;
+            winningLine = null;
+            render();
+        }
+
+        // Event Listeners
+        resetBtn.addEventListener('click', resetGame);
+
+        startScreen.addEventListener('click', () => {
+            startScreen.style.opacity = '0';
+            setTimeout(() => {
+                startScreen.style.display = 'none';
+            }, 700);
+        });
+
+        // Iniciar
+        initBoard();
+
+    </script>
+</body>
+</html>
